@@ -1,0 +1,63 @@
+# === Python / Django ===
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.DS_Store
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+develop-eggs/
+.eggs/
+*.mo
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django specific
+/staticfiles/
+media/
+local_settings.py
+db.sqlite3
+
+# === Node / Next.js ===
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.pnpm-debug.log*
+
+# === Environment & config ===
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.pem
+
+# === IDE / Editors ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# === OS ===
+.DS_Store
+Thumbs.db
