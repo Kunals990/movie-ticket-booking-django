@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from .models import Movie, Show, Booking
+from django.db import transaction
 from rest_framework.permissions import IsAdminUser
 from .serializers import (
     UserSerializer,
@@ -47,31 +48,36 @@ class BookSeatView(APIView):
     permission_classes = [IsAuthenticated] 
 
     def post(self, request, id):
-        try:
-            show = Show.objects.get(id=id)
-        except Show.DoesNotExist:
-            return Response({'error':'Show not found.'}, status=status.HTTP_404_NOT_FOUND)
-
         seat_number = request.data.get('seat_number')
 
-        if not seat_number:
-            return Response({'error':'Seat number is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not seat_number or not isinstance(seat_number, int) or seat_number <= 0:
+            return Response({'error': 'A valid seat number is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        booked_seats_count=Booking.objects.filter(show=show, status='booked').count()
-        if booked_seats_count >= show.total_seats:
-            return Response({'error':'This show is fully booked.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            with transaction.atomic():
+                show = Show.objects.select_for_update().get(id=id)
 
-        is_already_booked = Booking.objects.filter(show=show, seat_number=seat_number, status='booked').exists()
-        if is_already_booked:
-            return Response({'error':'This seat is already booked.'}, status=status.HTTP_400_BAD_REQUEST)
+                if seat_number > show.total_seats:
+                    return Response({'error': f'Invalid seat number. Must be between 1 and {show.total_seats}.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        booking = Booking.objects.create(
-            user=request.user,
-            show=show,
-            seat_number=seat_number,
-        )
-        serializer = BookingSerializer(booking)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                booked_seats_count = Booking.objects.filter(show=show, status='booked').count()
+                if booked_seats_count >= show.total_seats:
+                    return Response({'error': 'This show is fully booked.'}, status=status.HTTP_400_BAD_REQUEST)
+
+                is_already_booked = Booking.objects.filter(show=show, seat_number=seat_number, status='booked').exists()
+                if is_already_booked:
+                    return Response({'error': 'This seat is already booked.'}, status=status.HTTP_400_BAD_REQUEST)
+
+                booking = Booking.objects.create(
+                    user=request.user,
+                    show=show,
+                    seat_number=seat_number,
+                )
+                serializer = BookingSerializer(booking)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Show.DoesNotExist:
+            return Response({'error': 'Show not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 class CancelBookingView(APIView):
     permission_classes = [IsAuthenticated]
