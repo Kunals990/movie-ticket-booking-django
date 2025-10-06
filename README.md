@@ -34,6 +34,19 @@ It provides a complete API for user management, movie listings, showtimes, and s
 
 ---
 
+## My Approach
+
+-   **API Design**: I used Django REST Framework (DRF) to build a clean, well-structured, and scalable RESTful API. The logic is separated into Models (data structure), Serializers (data translation/validation), and Views (endpoints).
+
+-   **Authentication**: I implemented JWT (JSON Web Token) authentication for a stateless and secure way to handle user sessions. All booking-related endpoints are protected (except All Movie List Endpoint) , requiring a valid token.
+
+-   **Business Logic & Concurrency**: To handle the critical booking logic, I used atomic database transactions (`transaction.atomic`) with row-level locking (`select_for_update`). This is a robust solution that prevents race conditions, ensuring that two users cannot book the same seat simultaneously and that inventory is managed correctly.
+
+-   **Testing**: I prioritized writing unit tests for the most critical parts of the application: the booking and cancellation logic. This ensures the core business rules are reliable and prevents regressions.
+
+-   **Documentation**: I integrated Swagger UI to provide clear, interactive, and self-documenting API endpoints, making the API easy for developers to understand and consume.
+---
+
 
 ## Tech Stack
 
